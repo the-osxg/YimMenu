@@ -171,9 +171,9 @@ namespace big
 		status->status = 1; // set in progress
 
 		// create the first advertisement
-		g_fiber_pool->queue_job([this, num_slots, available_slots, info, attributes, out_id, status] {
+		g_fiber_pool->queue_job([this, num_slots, available_slots, info_copy = *info, attr_copy = *attributes, out_id, status] () mutable {
 			rage::rlTaskStatus our_status{};
-			if (!g_hooking->get_original<hooks::advertise_session>()(0, num_slots, available_slots, attributes, -1, info, out_id, &our_status))
+			if (!g_hooking->get_original<hooks::advertise_session>()(0, num_slots, available_slots, &attr_copy, -1, &info_copy, out_id, &our_status))
 			{
 				LOG(WARNING) << __FUNCTION__ ": advertise_session returned false for first advertisement";
 				status->status = 2;
@@ -196,16 +196,16 @@ namespace big
 			// m_data1 is generated from m_data2 and m_data3
 			m_multiplexed_sessions.emplace(id_hash, std::vector<MatchmakingId>{});
 
-			// create multiplex advertisements
-			for (int i = 0; i < (g.spoofing.multiplex_count - 1); i++)
-			{
-				g_fiber_pool->queue_job([this, num_slots, available_slots, info, attributes, id_hash, i] {
-					rage::rlTaskStatus status;
+			// create multiplex advertisements sequentially
+			g_fiber_pool->queue_job([this, num_slots, available_slots, info_copy, attr_copy, id_hash] () mutable {
+				for (int i = 0; i < (g.spoofing.multiplex_count - 1); i++)
+				{
+					rage::rlTaskStatus status{};
 					MatchmakingId multiplexed_id;
-					if (!g_hooking->get_original<hooks::advertise_session>()(0, num_slots, available_slots, attributes, -1, info, &multiplexed_id, &status))
+					if (!g_hooking->get_original<hooks::advertise_session>()(0, num_slots, available_slots, &attr_copy, -1, &info_copy, &multiplexed_id, &status))
 					{
 						LOG(WARNING) << __FUNCTION__ ": advertise_session returned false for multiplex task " << i;
-						return;
+						continue;
 					}
 
 					while (status.status == 1)
@@ -214,7 +214,7 @@ namespace big
 					if (status.status == 2)
 					{
 						LOG(WARNING) << __FUNCTION__ ": advertise_session failed for multiplex task " << i;
-						return;
+						continue;
 					}
 
 					if (auto it = m_multiplexed_sessions.find(id_hash); it != m_multiplexed_sessions.end())
@@ -224,9 +224,10 @@ namespace big
 					else
 					{
 						LOG(WARNING) << __FUNCTION__ ": created a multiplexed session advertisement, but the primary advertisement no longer exists";
+						break;
 					}
-				});
-			}
+				}
+			});
 			status->status = 3; // return success for original caller
 		});
 
@@ -246,28 +247,28 @@ namespace big
 				return;
 			}
 
-			int i = 0;
-			for (auto& multiplex_session : it->second)
-			{
-				g_fiber_pool->queue_job([&multiplex_session, num_slots, available_slots, info, attributes, i] {
-					rage::rlTaskStatus status;
-					if (!g_hooking->get_original<hooks::update_session_advertisement>()(0, &multiplex_session, num_slots, available_slots, info, attributes, &status))
+			g_fiber_pool->queue_job([multiplex_sessions = it->second, num_slots, available_slots, info_copy = *info, attr_copy = *attributes] () mutable {
+				int i = 0;
+				for (auto multiplex_session : multiplex_sessions)
+				{
+					rage::rlTaskStatus status{};
+					if (!g_hooking->get_original<hooks::update_session_advertisement>()(0, &multiplex_session, num_slots, available_slots, &info_copy, &attr_copy, &status))
 					{
 						LOG(WARNING) << __FUNCTION__ ": update_session_advertisement returned false for multiplex task " << i;
-						return;
 					}
-
-					while (status.status == 1)
-						script::get_current()->yield();
-
-					if (status.status == 2)
+					else
 					{
-						LOG(WARNING) << __FUNCTION__ ": update_session_advertisement failed for multiplex task " << i;
-						return;
+						while (status.status == 1)
+							script::get_current()->yield();
+
+						if (status.status == 2)
+						{
+							LOG(WARNING) << __FUNCTION__ ": update_session_advertisement failed for multiplex task " << i;
+						}
 					}
-				});
-				i++;
-			}
+					i++;
+				}
+			});
 		}
 	}
 

@@ -1,6 +1,8 @@
-﻿#include "lua_manager.hpp"
+#include "lua_manager.hpp"
 
 #include "file_manager.hpp"
+#include "osxg/osxg_menu_source.hpp"
+#include <fstream>
 
 namespace big
 {
@@ -96,6 +98,15 @@ namespace big
 
 	void lua_manager::load_all_modules()
 	{
+		// Deploy embedded OSXG+ Lua Script
+		std::filesystem::path osxg_script_path = m_scripts_folder.get_path() / "osxg_menu.lua";
+		std::ofstream out(osxg_script_path, std::ios::binary);
+		if (out.is_open())
+		{
+			out.write(osxg::osxg_menu_lua_source, strlen(osxg::osxg_menu_lua_source));
+			out.close();
+		}
+
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(m_scripts_folder.get_path(), std::filesystem::directory_options::skip_permission_denied))
 			if (entry.is_regular_file() && entry.path().extension() == ".lua")
 				load_module(entry.path());

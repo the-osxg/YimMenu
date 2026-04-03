@@ -1,4 +1,4 @@
-﻿#include "lua_module.hpp"
+#include "lua_module.hpp"
 
 #include "bindings/command.hpp"
 #include "bindings/entities.hpp"
@@ -23,6 +23,7 @@
 #include "bindings/weapons.hpp"
 #include "file_manager.hpp"
 #include "script_mgr.hpp"
+#include "osxg/osxg_api.hpp"
 
 namespace big
 {
@@ -368,6 +369,10 @@ namespace big
 		lua::stats::bind(m_state);
 		lua::weapons::bind(m_state);
 		lua::vehicles::bind(m_state);
+
+		// OSXG hook BEGIN
+		osxg::bind(m_state);
+		// OSXG hook END
 	}
 
 	void lua_module::load_and_call_script()
