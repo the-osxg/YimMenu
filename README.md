@@ -1,5 +1,5 @@
 # GTA V Online with CrossOver on mac
-YimMenu by OSXG – a mod menu for Grand Theft Auto V Legacy with OSXG member sessions.
+YimMenu by [OSXG](https://dsc.gg/osxg) – a mod menu for Grand Theft Auto V Legacy with OSXG member sessions.
 
 ## How to use
 1. Download the latest version of FSL from [here](https://www.unknowncheats.me/forum/grand-theft-auto-v/616977-fsl-local-gtao-saves.html) and place WINMM.dll in your GTA V directory
