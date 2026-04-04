@@ -2,7 +2,7 @@
 YimMenu by [OSXG](https://dsc.gg/osxg) – a mod menu for Grand Theft Auto V Legacy with OSXG member sessions.
 
 ## How to use
-1. Download the latest version of FSL from [here](https://www.unknowncheats.me/forum/grand-theft-auto-v/616977-fsl-local-gtao-saves.html) and place WINMM.dll in your GTA V directory
+1. Download the latest version of FSL from [here](https://dsc.gg/osxg) and place WINMM.dll in your GTA V directory
 2. Download YimMenu from [GitHub Releases](https://github.com/daniil-pogorelov/YimMenu/releases/tag/nightly)
 3. Download an injector, such as [Injector by nefarius](https://github.com/nefarius/Injector/releases/tag/v1.4.0)
 4. Open Rockstar Launcher, select Grand Theft Auto V Legacy, go to settings, and disable BattlEye. If you are using Steam or Epic Games, you may have to pass the -nobattleye command line parameter as well
